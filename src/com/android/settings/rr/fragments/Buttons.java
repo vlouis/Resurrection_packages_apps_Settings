@@ -16,30 +16,67 @@
 
 package com.android.settings.rr.fragments;
 
+
+import android.content.ComponentName;	// VL-mod
+
 import android.content.ContentResolver;
 import android.content.Context;
+
+import android.content.Intent;	// VL-mod
+import android.content.pm.PackageManager;	// VL-mod
+import android.content.pm.ResolveInfo;	// VL-mod
+import android.content.res.Resources;	// VL-mod
+
+
 import android.os.Bundle;
-import android.os.UserHandle;
+import android.os.Handler;		//
 import android.os.PowerManager;
+import android.os.RemoteException;		//
 import android.os.ServiceManager;
+import android.os.UserHandle;
+
+import android.provider.Settings;
+
 import android.support.v7.preference.PreferenceCategory;
 import android.support.v7.preference.ListPreference;
 import android.support.v7.preference.Preference;
 import android.support.v7.preference.PreferenceScreen;
 import android.support.v7.preference.Preference.OnPreferenceChangeListener;
 import android.support.v14.preference.SwitchPreference;
-import android.provider.Settings;
+
+import android.util.Log;
+import android.view.Display;
+import android.view.DisplayInfo;
+import android.view.IWindowManager;
+import android.view.KeyCharacterMap;
+import android.view.KeyEvent;
+import android.view.WindowManagerGlobal;
+
+import com.android.internal.logging.nano.MetricsProto;
+import com.android.internal.utils.du.ActionConstants;
+import com.android.internal.utils.du.DUActionUtils;
 
 import com.android.settings.R;
 import com.android.settings.SettingsPreferenceFragment;
 import com.android.settings.Utils;
 
-import com.android.internal.logging.nano.MetricsProto;
-import com.android.internal.utils.du.ActionConstants;
-import com.android.internal.utils.du.DUActionUtils;
 import com.android.settings.rr.Preferences.CustomSeekBarPreference;
 import com.android.settings.rr.utils.TelephonyUtils;
+import com.android.settings.rr.utils.DeviceUtils;
+
+import org.lineageos.internal.util.ScreenType;
+import static org.lineageos.internal.util.DeviceKeysConstants.*;
+
+import java.util.List;		// VL-mod
+
 import lineageos.providers.LineageSettings;
+
+
+
+
+
+
+
 
 public class Buttons extends ActionFragment implements Preference.OnPreferenceChangeListener {
     private static final String HWKEY_DISABLE = "hardware_keys_disable";
@@ -57,6 +94,26 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
     private static final String KEY_BUTTON_MANUAL_BRIGHTNESS_NEW = "button_manual_brightness_new";
     private static final String KEY_BUTTON_TIMEOUT = "button_timeout";
     private static final String KEY_BUTON_BACKLIGHT_OPTIONS = "button_backlight_options_category";
+	
+    // VL-mod
+    //private static final String KEY_BACK_LONG_PRESS = "hwkeys_button_back_long_press";
+	private static final String KEY_HOME_LONG_PRESS = "hwkeys_button_home_long_press";
+    private static final String KEY_HOME_DOUBLE_TAP = "hwkeys_button_home_double_tap";
+    private static final String KEY_APP_SWITCH_PRESS = "hwkeys_button_overview_single_tap";
+    private static final String KEY_APP_SWITCH_LONG_PRESS = "hwkeys_button_overview_long_press";	
+    //private ListPreference mBackLongPressAction;
+	private ListPreference mHomeLongPressAction;
+    private ListPreference mHomeDoubleTapAction; 
+	private ListPreference mAppSwitchPressAction;
+    private ListPreference mAppSwitchLongPressAction;
+	
+	
+	
+	
+	
+	
+	
+	
 
     // Masks for checking presence of hardware keys.
     // Must match values in frameworks/base/core/res/res/values/config.xml
@@ -131,11 +188,17 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
                 com.android.internal.R.integer.config_deviceHardwareKeys);
 
         // read bits for present hardware keys
-        final boolean hasHomeKey = (deviceKeys & KEY_MASK_HOME) != 0;
+		// VL - keys detection bug - force select "App-switch" & "Home" keys
+        //final boolean hasHomeKey = (deviceKeys & KEY_MASK_HOME) != 0;
+		final boolean hasHomeKey = true;
         final boolean hasBackKey = (deviceKeys & KEY_MASK_BACK) != 0;
         final boolean hasMenuKey = (deviceKeys & KEY_MASK_MENU) != 0;
         final boolean hasAssistKey = (deviceKeys & KEY_MASK_ASSIST) != 0;
-        final boolean hasAppSwitchKey = (deviceKeys & KEY_MASK_APP_SWITCH) != 0;
+        //final boolean hasAppSwitchKey = (deviceKeys & KEY_MASK_APP_SWITCH) != 0;
+		final boolean hasAppSwitchKey = true;
+		
+		
+		boolean hasAnyBindableKey = false;
 
         // load categories and init/remove preferences based on device
         // configuration
@@ -154,21 +217,22 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
             homeCategory.removePreference(mHomeAnswerCall);
             mHomeAnswerCall = null;
         }
-
-        // back key
+		
+		// back key
         if (!hasBackKey) {
             prefScreen.removePreference(backCategory);
         }
 
+
         // home key
         if (!hasHomeKey) {
             prefScreen.removePreference(homeCategory);
-        }
+        } 			
 
-        // App switch key (recents)
+        // App switch key (recents) - VL-mod
         if (!hasAppSwitchKey) {
-            prefScreen.removePreference(appSwitchCategory);
-        }
+			prefScreen.removePreference(appSwitchCategory);
+        } 
 
         // menu key
         if (!hasMenuKey) {
@@ -191,6 +255,37 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
     protected boolean usesExtendedActionsList() {
         return true;
     }
+	
+    // VL-mod
+    private ListPreference initList(String key, Action value) {
+        return initList(key, value.ordinal());
+    }
+
+    private ListPreference initList(String key, int value) {
+        ListPreference list = (ListPreference) getPreferenceScreen().findPreference(key);
+        if (list == null) return null;
+        list.setValue(Integer.toString(value));
+        list.setSummary(list.getEntry());
+        list.setOnPreferenceChangeListener(this);
+        return list;
+    }
+	
+	
+    private void handleListChange(ListPreference pref, Object newValue, String setting) {
+        String value = (String) newValue;
+        int index = pref.findIndexOfValue(value);
+        pref.setSummary(pref.getEntries()[index]);
+        LineageSettings.System.putIntForUser(getContentResolver(), setting, Integer.valueOf(value), UserHandle.USER_CURRENT);
+    }
+
+    private void handleSystemListChange(ListPreference pref, Object newValue, String setting) {
+        String value = (String) newValue;
+        int index = pref.findIndexOfValue(value);
+        pref.setSummary(pref.getEntries()[index]);
+        Settings.System.putIntForUser(getContentResolver(), setting, Integer.valueOf(value), UserHandle.USER_CURRENT);
+    }
+	// VL-mod-end
+	
 
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -207,10 +302,42 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
             int buttonBrightness = (Integer) newValue;
             Settings.System.putInt(getContentResolver(),
                     Settings.System.CUSTOM_BUTTON_BRIGHTNESS, buttonBrightness);
+	// VL-mod
+	} else if (preference == mHomeLongPressAction) {
+            handleListChange(mHomeLongPressAction, newValue,
+                    LineageSettings.System.KEY_HOME_LONG_PRESS_ACTION);
+            
+    } else if (preference == mHomeDoubleTapAction) {
+            handleListChange(mHomeDoubleTapAction, newValue,
+                    LineageSettings.System.KEY_HOME_DOUBLE_TAP_ACTION);
+             
+	} else if (preference == mAppSwitchPressAction) {
+            handleListChange(mAppSwitchPressAction, newValue,
+                    LineageSettings.System.KEY_APP_SWITCH_ACTION); 
+					
+	} else if (preference == mAppSwitchLongPressAction) {
+            handleListChange(mAppSwitchLongPressAction, newValue,
+                    LineageSettings.System.KEY_APP_SWITCH_LONG_PRESS_ACTION); 
         } else {
             return false;
         }
         return true;
+    }
+	
+	// VL - HomeAnswerCall
+	@Override
+    public void onResume() {
+        super.onResume();
+
+        // Home button answers calls.
+        if (mHomeAnswerCall != null) {
+            final int incallHomeBehavior = LineageSettings.Secure.getIntForUser(getContentResolver(),
+                    LineageSettings.Secure.RING_HOME_BUTTON_BEHAVIOR,
+                    LineageSettings.Secure.RING_HOME_BUTTON_BEHAVIOR_DEFAULT, UserHandle.USER_CURRENT);
+            final boolean homeButtonAnswersCall =
+                (incallHomeBehavior == LineageSettings.Secure.RING_HOME_BUTTON_BEHAVIOR_ANSWER);
+            mHomeAnswerCall.setChecked(homeButtonAnswersCall);
+        }
     }
 
     @Override
