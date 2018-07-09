@@ -25,21 +25,10 @@
 	<SwitchPreference android:key="hardware_keys_disable"
 		android:title="@string/hardware_keys_disable_title" />
 		
-	<!-- VL-mod  	
-	<com.android.settings.rr.Preferences.ActionPreference
-            android:key="hwkeys_button_overview_long_press"
-            android:summary="@string/hardware_keys_long_press_summary"
-	    android:dialogTitle="@string/hardware_keys_long_press_title"
-            android:title="@string/hardware_keys_appswitch_key_title" 
-	    android:entries="@array/shortcut_action_entries"
-            android:entryValues="@array/shortcut_action_values"
-	    android:persistent="false">
-        </com.android.settings.rr.Preferences.ActionPreference>	
-	-->	
     </PreferenceCategory>
 	
 	
-	<!-- VL-info: not showed - ?? Buttons.java hw-key detection bug - force-enabled: Home & AppSwitch  -->
+	<!-- VL - Buttons options not showed - ?? Buttons.java hw-key detection bug - force-enabled: Home & AppSwitch  -->
     <PreferenceCategory
         android:key="button_backlight_options_category"
         android:title="@string/button_backlight_options_category" >
@@ -91,18 +80,7 @@
             android:title="@string/hardware_keys_single_tap_title" >
         </com.android.settings.rr.Preferences.ActionPreference>
 	
-		<!-- VL-mod  added: android:dialogTitle; android:entries; android:entryValues; ndroid:persistent 
-        <com.android.settings.rr.Preferences.ActionPreference
-            android:key="hwkeys_button_back_long_press"
-            android:summary="@string/hardware_keys_long_press_summary"
-	    android:dialogTitle="@string/hardware_keys_long_press_title"
-            android:title="@string/hardware_keys_long_press_title" 
-	    android:entries="@array/shortcut_action_entries"
-            android:entryValues="@array/shortcut_action_values"
-	    android:persistent="false">
-        </com.android.settings.rr.Preferences.ActionPreference>
-		-->
-		
+	
 		<com.android.settings.rr.Preferences.ActionPreference
             android:key="hwkeys_button_back_long_press"
             android:summary="@string/hardware_keys_long_press_summary"
@@ -128,7 +106,7 @@
             android:summary="@string/home_answer_call_summary"
             android:persistent="false"/>
 		
-		<!--
+		<!-- VL - Home single tap - keep default function
         <com.android.settings.rr.Preferences.ActionPreference
             android:key="hwkeys_button_home_single_tap"
             android:summary="@string/hardware_keys_single_tap_summary"
@@ -167,7 +145,7 @@
             android:title="@string/hardware_keys_long_press_title"> 
         </com.android.settings.rr.Preferences.ActionPreference>
 		
-		<!--
+		<!-- VL - Lineage - app-switch double tap option exist?? try later...
         <com.android.settings.rr.Preferences.ActionPreference
             android:key="hwkeys_button_overview_double_tap"
             android:summary="@string/hardware_keys_double_tap_summary"
