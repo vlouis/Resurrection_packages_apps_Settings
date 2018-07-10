@@ -17,21 +17,21 @@
 package com.android.settings.rr.fragments;
 
 
-import android.content.ComponentName;	// VL-mod
+import android.content.ComponentName;	
 
 import android.content.ContentResolver;
 import android.content.Context;
 
-import android.content.Intent;	// VL-mod
-import android.content.pm.PackageManager;	// VL-mod
-import android.content.pm.ResolveInfo;	// VL-mod
-import android.content.res.Resources;	// VL-mod
+import android.content.Intent;	
+import android.content.pm.PackageManager;	
+import android.content.pm.ResolveInfo;	
+import android.content.res.Resources;	
 
 
 import android.os.Bundle;
-import android.os.Handler;		//
+import android.os.Handler;		
 import android.os.PowerManager;
-import android.os.RemoteException;		//
+import android.os.RemoteException;		
 import android.os.ServiceManager;
 import android.os.UserHandle;
 
@@ -67,7 +67,7 @@ import com.android.settings.rr.utils.DeviceUtils;
 import org.lineageos.internal.util.ScreenType;
 import static org.lineageos.internal.util.DeviceKeysConstants.*;
 
-import java.util.List;		// VL-mod
+import java.util.List;		
 
 import lineageos.providers.LineageSettings;
 
@@ -96,12 +96,12 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
     private static final String KEY_BUTON_BACKLIGHT_OPTIONS = "button_backlight_options_category";
 	
     // VL-mod
-    //private static final String KEY_BACK_LONG_PRESS = "hwkeys_button_back_long_press";
+    //private static final String KEY_BACK_LONG_PRESS = "hwkeys_button_back_long_press";  // - missing option in "LineageSettings.System"
 	private static final String KEY_HOME_LONG_PRESS = "hwkeys_button_home_long_press";
     private static final String KEY_HOME_DOUBLE_TAP = "hwkeys_button_home_double_tap";
     private static final String KEY_APP_SWITCH_PRESS = "hwkeys_button_overview_single_tap";
     private static final String KEY_APP_SWITCH_LONG_PRESS = "hwkeys_button_overview_long_press";	
-    //private ListPreference mBackLongPressAction;
+    //private ListPreference mBackLongPressAction;  // - missing option in "LineageSettings.System"
 	private ListPreference mHomeLongPressAction;
     private ListPreference mHomeDoubleTapAction; 
 	private ListPreference mAppSwitchPressAction;
@@ -229,7 +229,7 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
             prefScreen.removePreference(homeCategory);
         } 			
 
-        // App switch key (recents) - VL-mod
+        // App switch key (recents)
         if (!hasAppSwitchKey) {
 			prefScreen.removePreference(appSwitchCategory);
         } 
@@ -256,7 +256,7 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
         return true;
     }
 	
-    // VL-mod
+    
     private ListPreference initList(String key, Action value) {
         return initList(key, value.ordinal());
     }
@@ -284,7 +284,7 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
         pref.setSummary(pref.getEntries()[index]);
         Settings.System.putIntForUser(getContentResolver(), setting, Integer.valueOf(value), UserHandle.USER_CURRENT);
     }
-	// VL-mod-end
+	
 	
 
     @Override
@@ -306,15 +306,15 @@ public class Buttons extends ActionFragment implements Preference.OnPreferenceCh
 	} else if (preference == mHomeLongPressAction) {
             handleListChange(mHomeLongPressAction, newValue,
                     LineageSettings.System.KEY_HOME_LONG_PRESS_ACTION);
-            
+    // VL-mod        
     } else if (preference == mHomeDoubleTapAction) {
             handleListChange(mHomeDoubleTapAction, newValue,
                     LineageSettings.System.KEY_HOME_DOUBLE_TAP_ACTION);
-             
+    // VL-mod         
 	} else if (preference == mAppSwitchPressAction) {
             handleListChange(mAppSwitchPressAction, newValue,
                     LineageSettings.System.KEY_APP_SWITCH_ACTION); 
-					
+	// VL-mod				
 	} else if (preference == mAppSwitchLongPressAction) {
             handleListChange(mAppSwitchLongPressAction, newValue,
                     LineageSettings.System.KEY_APP_SWITCH_LONG_PRESS_ACTION); 
